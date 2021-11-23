@@ -1,203 +1,292 @@
-var bg,bgImg;
-var player, shooterImg, shooter_shooting;
-var zombie , zombieImg, zombies
-var bullet,bulletImg,bullets
-var heart1Img,heart2Img,heart3Img,heart1,heart2,heart3
-var bullets = 50
-var score = 0
-var gamestate = "fight"
-var life = 3
+var bg
+var bottomGround, topGround
+var balloon, balloonImg
+var obstacleTop, obstacleTopImg
+var obstacleBottom, obstacleBottom1, obstacleBottom2
+var gameOver, gameOverImg
+var restart, restartImg
+var backgroundImg
+
+var score = 0;
+
+//game states      
+var PLAY = 1;
+var END = 0;
+var gameState = PLAY;
 
 
 function preload(){
-  heart1Img = loadImage("assets/heart_1.png")
-  heart2Img = loadImage("assets/heart_2.png")
-  heart3Img = loadImage("assets/heart_3.png")
+  bgImg = loadImage("assets/bg.png")
+  bgImg2 = loadImage("assets/bgImg2.jpg")
 
-  shooterImg = loadImage("assets/shooter_2.png")
-  shooter_shooting = loadImage("assets/shooter_3.png")
-  zombieImg = loadImage("assets/zombie.png")
-  bgImg = loadImage("assets/bg.jpeg")
-  bulletImg = loadImage("assets/bullet.png")
-  winning = loadSound("assets/win.mp3")
-  lose = loadSound("assets/lose.mp3")
-  explosion = loadSound("assets/explosion.mp3")
+  balloonImg = loadAnimation("assets/balloon1.png","assets/balloon2.png","assets/balloon3.png")
+  
+  obsTop1 = loadImage("assets/obsTop1.png")
+  obsTop2 = loadImage("assets/obsTop2.png")
+  
+  obsBottom1 = loadImage("assets/obsBottom1.png")
+  obsBottom2 = loadImage("assets/obsBottom2.png")
+  obsBottom3 = loadImage("assets/obsBottom3.png")
+  
+  gameOverImg= loadImage("assets/gameOver.png")
+  restartImg = loadImage("assets/restart.png")
+
+jumpSound = loadSound("assets/jump.mp3");
+dieSound = loadSound("assets/die.mp3");
 
 }
 
-function setup() {
+function setup(){
 
-  
-  createCanvas(windowWidth,windowHeight);
+  createCanvas(400,400)
+//background image
+bg = createSprite(165,485,1,1);
+getBackgroundImg();
 
-//adding the background image
-bg = createSprite(displayWidth/2-20,displayHeight/2-40,20,20)
-bg.addImage(bgImg)
-bg.scale = 1.1
-  
 
-//creating the player sprite player.addImage(shooterImg)
-  player = createSprite(displayWidth-1150,displayHeight-300,50,50)
-   
-   player.scale = 0.3
-   player.debug = false
-   player.setCollider("rectangle",0,0,300,300)
-  player.addImage(shooterImg)
-   zombies = new Group();
-   bulletsGroup = new Group();
+//creating top and bottom grounds
+bottomGround = createSprite(200,390,800,20);
+bottomGround.visible = false;
 
-   heart1 = createSprite(displayWidth-150,40,20,20)
-   heart1.addImage(heart1Img)
-   heart1.scale = 0.4
-   heart1.visible = false
+topGround = createSprite(200,10,800,20);
+topGround.visible = false;
+      
+//creating balloon     
+balloon = createSprite(100,200,20,50);
+balloon.addAnimation("balloon",balloonImg);
+balloon.scale = 0.2;
+balloon.debug = true;
 
-   
-  heart2 = createSprite(displayWidth-150,40,20,20)
-  heart2.addImage(heart2Img)
-  heart2.scale = 0.4
-  heart2.visible = false
 
-  
-  heart3 = createSprite(displayWidth-150,40,20,20)
-  heart3.addImage(heart3Img)
-  heart3.scale = 0.4
-  heart3.visible = true
+//initialising groups
+topObstaclesGroup = new Group();
+bottomObstaclesGroup = new Group();
+barGroup = new Group();
+
+//creating game over and restart sprites
+gameOver = createSprite(220,200);
+restart = createSprite(220,240);
+gameOver.addImage(gameOverImg);
+gameOver.scale = 0.5;
+restart.addImage(restartImg);
+restart.scale = 0.5;
+gameOver.visible = false;
+restart.visible = false;
+
+
 }
 
 function draw() {
-  background(0); 
-
-if(gamestate==="fight"){
-
-if (life===3){
-heart3.visible=true
-heart2.visible=false;
-heart1.visible=false
-}
-if(life===2){
-heart2.visible=true;
-heart3.visible=false;
-heart1.visible=false
-
-}
-if(life===1){
-heart1.visible=true;
-heart2.visible=false;
-heart3.visible=false;
-}
-if(life===0){
-gamestate="lost"
-lose.play()
-}
-if(score===150){
-gamestate="won"
-winning.play()
-}
-
-  //moving the player up and down and making the game mobile compatible using touches
-if(keyDown("UP_ARROW")||touches.length>0){
-  player.y = player.y-30
-}
-if(keyDown("DOWN_ARROW")||touches.length>0){
-  player.y = player.y+30
- }
- if(keyDown("RIGHT_ARROW")||touches.length>0){
-  player.x = player.x+30
- }
- if(keyDown("LEFT_ARROW")||touches.length>0){
-  player.x = player.x-30
-
   
- }
 
+  if(gameState === PLAY){
 
-//release bullets and change the image of shooter to shooting position when space is pressed
-if(keyWentDown("space")){
- bullet=createSprite(player.x,player.y-30,20,10)
- bullet.addImage(bulletImg)
- bullet.velocityX = 20
- bullet.scale=0.03
-bulletsGroup.add(bullet)
-player.depth=bullet.depth
-player.depth=player.depth+2
-bullets = bullets-1
-  player.addImage(shooter_shooting)
-  explosion.play()
-}
-//player goes back to original standing image once we stop pressing the space bar
-else if(keyWentUp("space")){
-  player.addImage(shooterImg)
-}
-if(bullets===0){
-gamestate="bullet"
-lose.play()
-}
-if(zombies.isTouching(player)){
-for(var i=0;i<zombies.length;i++){
-if(zombies[i].isTouching(player)){
-zombies[i].destroy()
-life = life-1
-}
-}}
-if(zombies.isTouching(bulletsGroup)){
-  for(var i=0;i<zombies.length;i++){
-  if(zombies[i].isTouching(bulletsGroup)){
-  zombies[i].destroy()
-  bulletsGroup.destroyEach()
-  score=score+1
+    //making the hot air balloon jump
+    if(keyDown("space")) {
+      balloon.velocityY = -3;
+      jumpSound.play();
     }
+
+    //adding gravity
+     balloon.velocityY = balloon.velocityY + 0.08;
+
+     
+    Bar();
+
+     //spawning top and bottom obstacles
+     spawnObstaclesTop();
+     spawnObstaclesBottom();
+
+//condition for END state
+if(topObstaclesGroup.isTouching(balloon)|| balloon.isTouching(bottomGround)
+|| bottomObstaclesGroup.isTouching(balloon)){
+
+gameState = END;
+dieSound.play();
+}
+
+
+//Adding AI for balloon when touching topObstaclesGroup and topGround
+
+/*if(topObstaclesGroup.isTouching(balloon) || balloon.isTouching(topGround)){
+  balloon.velocityY = 6 ;
+  jumpSound.play();
+}*/
+
+
+//Adding AI for balloon when touching topObstaclesGroup and topGround
+
+/*if(balloon.isTouching(bottomGround) || bottomObstaclesGroup.isTouching(balloon)){
+  balloon.velocityY = -6 ;
+  jumpSound.play();
+}*/
+
+  }
+
+  if(gameState === END) 
+    {
+
+      gameOver.visible = true;
+      gameOver.depth = gameOver.depth+1
+      restart.visible = true;
+      restart.depth = restart.depth+1
+          
+          //all sprites should stop moving in the END state
+          balloon.velocityX = 0;
+          balloon.velocityY = 0;
+          topObstaclesGroup.setVelocityXEach(0);
+          bottomObstaclesGroup.setVelocityXEach(0);
+          barGroup.setVelocityXEach(0);
+          
+          //setting -1 lifetime so that obstacles don't disappear in the END state
+          topObstaclesGroup.setLifetimeEach(-1);
+          bottomObstaclesGroup.setLifetimeEach(-1);
+         
+          balloon.y = 200;
+          
+          //resetting the game
+          if(mousePressedOver(restart)) 
+          {
+                reset();
+          }
+
+    } 
+
+    drawSprites();
+    Score();     
+}
+
+function reset()
+{
+  gameState = PLAY;
+  gameOver.visible = false;
+  restart.visible = false;
+  topObstaclesGroup.destroyEach();
+  bottomObstaclesGroup.destroyEach();
+
+  score = 0;
+}
+
+
+function spawnObstaclesTop() 
+{
+  if(World.frameCount % 200 === 0) {
+    obstacleTop = createSprite(400,50,40,50);
+
+//obstacleTop.addImage(obsTop1);
+
+obstacleTop.scale = 0.05;
+obstacleTop.velocityX = -4;
+
+//random y positions for top obstacles
+obstacleTop.y = Math.round(random(10,100));
+
+//generate random top obstacles
+var rand = Math.round(random(1,2));
+switch(rand) {
+  case 1: obstacleTop.addImage(obsTop1);
+          break;
+  case 2: obstacleTop.addImage(obsTop2);
+          break;
+  default: break;
+}
+
+ //assign lifetime to the variable
+obstacleTop.lifetime = 100;
+
+balloon.depth = balloon.depth + 1;
+
+topObstaclesGroup.add(obstacleTop);
+
   }
 }
-spawnZombies()
-}
-drawSprites();
-fill("red")
-textSize(20)
-text("SCORE = "+score,displayWidth-10,50)
-text("LIFE = "+life,displayWidth-10,70)
-if(gamestate==="lost"){
-textSize(100)
-fill("yellow")
-text("YOU LOST",displayWidth/2,displayHeight/2)
-zombies.destroyEach()
-player.destroy()
-}
-else if(gamestate==="won"){
-  textSize(100)
-  fill("green")
-  text("YOU WON",displayWidth/2,displayHeight/2)
-  zombies.destroyEach()
-  player.destroy()
-}
-else if(gamestate==="bullet"){
-  textSize(50)
-  fill("green")
-  text("YOU RAN OUT OF BULLETS",displayWidth/2-200,displayHeight/2)
-  zombies.destroyEach()
-  bulletsGroup.destroyEach()
-  player.destroy()
 
-}
-}
+function spawnObstaclesBottom() 
+{
+  if(World.frameCount % 60 === 0) {
+    obstacleBottom = createSprite(400,350,40,50);
 
-function spawnZombies(){
-if(frameCount%100===0){
-zombie = createSprite(windowWidth,random(100,windowHeight-100),100,100)
-zombie.addImage(zombieImg)
-zombie.scale = 0.1;
-
-zombie.velocityX = -15
-zombies.add(zombie)  
-}
+obstacleBottom.addImage(obsBottom1);
+obstacleBottom.debug=true
 
 
+obstacleBottom.scale = 0.03;
+obstacleBottom.velocityX = -4;
+
+
+
+//generate random bottom obstacles
+var rand = Math.round(random(1,3));
+switch(rand) {
+  case 1: obstacleBottom.addImage(obsBottom1);
+          break;
+  case 2: obstacleBottom.addImage(obsBottom2);
+          break;
+  case 3: obstacleBottom.addImage(obsBottom3);
+          break;
+  default: break;
 }
-function createBullets(){
-  var bullet = createSprite(player.x+5,player.y-22,10,10)
-  bullet.velocityX = +25
-  bullet.addImage(bulletImg)
-  bullet.scale = 0.05;
-  bullets.add(bullet)
-  }  
 
+ //assign lifetime to the variable
+obstacleBottom.lifetime = 100;
 
+balloon.depth = balloon.depth + 1;
+
+bottomObstaclesGroup.add(obstacleBottom);
+
+  }
+}
+
+ function Bar() 
+ {
+         if(World.frameCount % 60 === 0)
+         {
+           var bar = createSprite(400,200,10,800);
+          bar.velocityX = -6
+        
+          
+          bar.velocityX = -6
+          bar.depth = balloon.depth;
+          bar.lifetime = 70;
+
+          bar.visible = false;
+
+          barGroup.add(bar);
+         }
+}
+
+function Score()
+{
+         if(balloon.isTouching(barGroup))
+         {
+           score = score + 1;
+         }
+        textFont("algerian");
+        textSize(30);
+        fill("yellow");
+        text("Score:"+ score, 250, 50);
+       
+      }
+
+// using API calls to set the background image according to time
+async function getBackgroundImg(){
+  var response = await fetch("http://worldtimeapi.org/api/timezone/Asia/Kolkata");
+  var responseJSON = await response.json();
+
+  var datetime = responseJSON.datetime;
+  var hour = datetime.slice(11,13);
+  console.log(hour)
+  if(hour>=06 && hour<=19){
+    
+    bg.addImage(bgImg);
+    bg.scale = 1.3
+  }
+  else{
+    
+    bg.addImage(bgImg2);
+    bg.scale = 1.5
+    bg.x=200
+    bg.y=200
+  }
+
+}
